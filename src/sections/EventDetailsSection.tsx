@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import type { WeddingConfig } from '../types';
 import { Calendar, MapPin, Check } from 'lucide-react';
 import { FloralCorners } from '../components/FloralCorners';
+import { useInView } from '../hooks/useInView';
 
 interface EventDetailsSectionProps {
   data: WeddingConfig;
+  isActive?: boolean;
 }
 
 interface TimeLeft {
@@ -14,7 +16,8 @@ interface TimeLeft {
   seconds: number;
 }
 
-export const EventDetailsSection: React.FC<EventDetailsSectionProps> = ({ data }) => {
+export const EventDetailsSection: React.FC<EventDetailsSectionProps> = ({ data, isActive = false }) => {
+  const { ref, isInView } = useInView<HTMLElement>(0.2, isActive);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
     hours: 0,
@@ -66,17 +69,22 @@ export const EventDetailsSection: React.FC<EventDetailsSectionProps> = ({ data }
   const padZero = (n: number) => String(n).padStart(2, '0');
 
   return (
-    <section className="snap-section relative w-full h-dvh min-h-dvh max-h-dvh shrink-0 flex flex-col justify-center items-center text-center px-6 sm:px-8 py-8 sm:py-10 bg-[#fef9f5] overflow-hidden">
+    <section
+      ref={ref}
+      className={`snap-section relative w-full h-dvh min-h-dvh max-h-dvh shrink-0 flex flex-col justify-center items-center text-center px-6 sm:px-8 py-8 sm:py-10 bg-[#fef9f5] overflow-hidden ${
+        isInView ? 'is-visible' : ''
+      }`}
+    >
       <FloralCorners />
 
       <div className="w-full max-w-[360px] flex flex-col items-center my-auto relative z-10">
         {/* Title */}
-        <p className="text-[11px] tracking-[0.3em] uppercase text-stone-500 mb-3 sm:mb-4 font-normal">
+        <p className="reveal delay-100 text-[11px] tracking-[0.3em] uppercase text-stone-500 mb-3 sm:mb-4 font-normal">
           Waktu &amp; Lokasi
         </p>
 
         {/* Countdown Timer Boxes */}
-        <div className="grid grid-cols-4 gap-2 w-full max-w-[300px] mx-auto mb-3">
+        <div className="reveal-scale delay-200 grid grid-cols-4 gap-2 w-full max-w-[300px] mx-auto mb-3">
           <div className="border border-stone-200 bg-stone-50/50 rounded-lg py-2 sm:py-2.5 px-1 flex flex-col items-center justify-center">
             <span className="font-display text-[18px] sm:text-[20px] font-normal text-stone-900 leading-none mb-1">
               {padZero(timeLeft.days)}
@@ -115,32 +123,34 @@ export const EventDetailsSection: React.FC<EventDetailsSectionProps> = ({ data }
         </div>
 
         {/* Simpan ke Kalender Button */}
-        <button
-          onClick={handleAddToCalendar}
-          className="inline-flex items-center gap-1.5 bg-[#721c24] hover:bg-[#58151c] active:scale-[0.98] transition-all duration-200 text-white text-[11px] sm:text-[11.5px] px-4 py-1.5 rounded-lg cursor-pointer tracking-wider mb-4 shadow-sm"
-        >
-          {calendarAdded ? (
-            <>
-              <Check className="w-3 h-3 text-white" />
-              Tersimpan di Kalender
-            </>
-          ) : (
-            <>
-              <Calendar className="w-3 h-3 text-rose-200" />
-              Simpan ke Google Calendar
-            </>
-          )}
-        </button>
+        <div className="reveal delay-300">
+          <button
+            onClick={handleAddToCalendar}
+            className="inline-flex items-center gap-1.5 bg-[#721c24] hover:bg-[#58151c] active:scale-[0.98] transition-all duration-200 text-white text-[11px] sm:text-[11.5px] px-4 py-1.5 rounded-lg cursor-pointer tracking-wider mb-4 shadow-sm"
+          >
+            {calendarAdded ? (
+              <>
+                <Check className="w-3 h-3 text-white" />
+                Tersimpan di Kalender
+              </>
+            ) : (
+              <>
+                <Calendar className="w-3 h-3 text-rose-200" />
+                Simpan ke Google Calendar
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Location Details Card */}
-        <div className="w-full max-w-[330px] border border-stone-200 bg-stone-50/50 rounded-xl p-4 sm:p-5 text-center">
-          <span className="text-[9.5px] uppercase tracking-[0.25em] text-stone-400 font-medium block mb-1">
+        <div className="reveal-scale delay-450 w-full max-w-[330px] border border-stone-200 bg-stone-50/50 rounded-xl p-4 sm:p-5 text-center">
+          <span className="reveal delay-500 text-[9.5px] uppercase tracking-[0.25em] text-stone-400 font-medium block mb-1">
             Tempat Acara
           </span>
-          <h3 className="font-display text-[16px] sm:text-[18px] font-normal text-stone-900 mb-1.5">
+          <h3 className="reveal delay-550 font-display text-[16px] sm:text-[18px] font-normal text-stone-900 mb-1.5">
             {data.map.placeName}
           </h3>
-          <p className="text-[11.5px] text-stone-500 leading-relaxed mb-4 max-w-[270px] mx-auto">
+          <p className="reveal delay-600 text-[11.5px] text-stone-500 leading-relaxed mb-4 max-w-[270px] mx-auto">
             {data.map.address}
           </p>
 
@@ -148,7 +158,7 @@ export const EventDetailsSection: React.FC<EventDetailsSectionProps> = ({ data }
             href={data.map.googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 bg-[#721c24] hover:bg-[#58151c] active:scale-[0.98] transition-all duration-200 text-white text-[11.5px] px-5 py-2 rounded-lg cursor-pointer tracking-wider uppercase font-medium shadow-md shadow-rose-950/20"
+            className="reveal delay-650 inline-flex items-center justify-center gap-1.5 bg-[#721c24] hover:bg-[#58151c] active:scale-[0.98] transition-all duration-200 text-white text-[11.5px] px-5 py-2 rounded-lg cursor-pointer tracking-wider uppercase font-medium shadow-md shadow-rose-950/20"
           >
             <MapPin className="w-3 h-3 text-rose-200" />
             Buka di Google Maps

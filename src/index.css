@@ -26,10 +26,6 @@
   font-family: 'Cinzel Decorative', 'Cinzel', 'Italiana', serif;
 }
 
-.font-luxury {
-  font-family: 'Italiana', 'Cinzel Decorative', serif;
-}
-
 .font-classic {
   font-family: 'Marcellus', 'Cinzel', serif;
 }
@@ -250,19 +246,6 @@
   animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
-@keyframes envelopeFlap {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
-}
-
-.animate-envelope {
-  animation: envelopeFlap 2.2s ease-in-out infinite;
-}
-
 @keyframes breatheTopLeft {
   0%, 100% {
     transform: scale(1) translate(0, 0);
@@ -292,15 +275,6 @@
   }
 }
 
-@keyframes breatheSubtle {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.018);
-  }
-}
-
 .animate-breathe-tl {
   transform-origin: top left;
   animation: breatheTopLeft 6s ease-in-out infinite;
@@ -318,7 +292,98 @@
   will-change: transform, opacity;
 }
 
-.animate-breathe-subtle {
-  animation: breatheSubtle 6.5s ease-in-out infinite;
-  will-change: transform;
+/* ====================================================
+   Reveal on Scroll Entrance Animations
+   ==================================================== */
+.reveal,
+.reveal-up {
+  opacity: 0;
+  transform: translateY(36px);
+  transition-property: opacity, transform;
+  transition-duration: 1100ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-down {
+  opacity: 0;
+  transform: translateY(-28px);
+  transition-property: opacity, transform;
+  transition-duration: 1100ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.88);
+  transition-property: opacity, transform;
+  transition-duration: 1100ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-fade {
+  opacity: 0;
+  transform: none;
+  transition-property: opacity;
+  transition-duration: 1100ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+/* Static initial mode: first section before user scrolls */
+.static-initial .reveal,
+.static-initial .reveal-up,
+.static-initial .reveal-down,
+.static-initial .reveal-scale,
+.static-initial .reveal-fade {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Active / In View States: Triggered when section is visible in view */
+.is-visible .reveal,
+.is-visible .reveal-up,
+.is-visible .reveal-down,
+.is-visible .reveal-scale,
+.is-visible .reveal-fade,
+.reveal.is-visible,
+.reveal-up.is-visible,
+.reveal-down.is-visible,
+.reveal-scale.is-visible,
+.reveal-fade.is-visible {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+/* Staggered Entrance Delays (only applied when visible) */
+.is-visible .delay-75  { transition-delay: 100ms !important; }
+.is-visible .delay-100 { transition-delay: 150ms !important; }
+.is-visible .delay-150 { transition-delay: 220ms !important; }
+.is-visible .delay-200 { transition-delay: 300ms !important; }
+.is-visible .delay-250 { transition-delay: 380ms !important; }
+.is-visible .delay-300 { transition-delay: 460ms !important; }
+.is-visible .delay-350 { transition-delay: 540ms !important; }
+.is-visible .delay-400 { transition-delay: 620ms !important; }
+.is-visible .delay-450 { transition-delay: 700ms !important; }
+.is-visible .delay-500 { transition-delay: 780ms !important; }
+.is-visible .delay-550 { transition-delay: 860ms !important; }
+.is-visible .delay-600 { transition-delay: 940ms !important; }
+.is-visible .delay-650 { transition-delay: 1020ms !important; }
+.is-visible .delay-700 { transition-delay: 1100ms !important; }
+.is-visible .delay-800 { transition-delay: 1200ms !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-up,
+  .reveal-down,
+  .reveal-scale,
+  .reveal-fade {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

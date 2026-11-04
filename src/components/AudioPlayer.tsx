@@ -20,8 +20,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         .then(() => {
           setIsPlaying(true);
         })
-        .catch(() => {
+        .catch((err) => {
           // Auto-play was prevented by user/browser policy
+          console.warn('Playback error / autoplay blocked by browser policy:', err);
           setIsPlaying(false);
         });
     }
@@ -37,7 +38,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       audioRef.current
         .play()
         .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+        .catch((err) => {
+          console.warn('Failed to play audio:', err);
+          setIsPlaying(false);
+        });
     }
   };
 

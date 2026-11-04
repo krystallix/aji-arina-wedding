@@ -9,18 +9,18 @@ import {
   VerseSection,
   AgendaSection,
   EventDetailsSection,
-  GiftSection,
   ClosingSection,
   GuestBookSection,
   FooterSection,
 } from './sections';
 
-const SECTION_COUNT = 8;
+const SECTION_COUNT = 7;
 
 export function App() {
   const [activeSection, setActiveSection] = useState(0);
   const [isOpened, setIsOpened] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const [playMusic, setPlayMusic] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
   const isScrollingRef = useRef(false);
@@ -44,6 +44,7 @@ export function App() {
     const sections = container.querySelectorAll<HTMLElement>('.snap-section');
     const target = sections[index];
     if (target) {
+      if (index > 0) setHasScrolled(true);
       target.scrollIntoView({ behavior: 'smooth' });
       setActiveSection(index);
     }
@@ -53,6 +54,7 @@ export function App() {
     if (isOpening || isOpened) return;
     setIsOpening(true);
     setPlayMusic(true);
+    setHasScrolled(false);
 
     // 3D smooth cinematic zoom portal duration is 1900ms
     setTimeout(() => {
@@ -69,6 +71,7 @@ export function App() {
     setIsOpened(false);
     setIsOpening(false);
     setActiveSection(0);
+    setHasScrolled(false);
   };
 
   // Track active section on scroll
@@ -79,8 +82,12 @@ export function App() {
     const scrollTop = container.scrollTop;
     const clientHeight = container.clientHeight;
     if (clientHeight > 0) {
+      if (scrollTop > 15) {
+        setHasScrolled(true);
+      }
       const index = Math.round(scrollTop / clientHeight);
-      setActiveSection(Math.min(SECTION_COUNT - 1, Math.max(0, index)));
+      const boundedIndex = Math.min(SECTION_COUNT - 1, Math.max(0, index));
+      setActiveSection(boundedIndex);
     }
   }, [isOpened]);
 
@@ -105,6 +112,7 @@ export function App() {
 
       e.preventDefault();
       isScrollingRef.current = true;
+      setHasScrolled(true);
 
       const direction = e.deltaY > 0 ? 1 : -1;
       const sections = container.querySelectorAll<HTMLElement>('.snap-section');
@@ -131,9 +139,11 @@ export function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
         e.preventDefault();
+        setHasScrolled(true);
         scrollToSection(Math.min(SECTION_COUNT - 1, activeSection + 1));
       } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
         e.preventDefault();
+        setHasScrolled(true);
         scrollToSection(Math.max(0, activeSection - 1));
       }
     };
@@ -215,28 +225,29 @@ export function App() {
           )}
 
           {/* 1. Salam Pembuka & Profil Mempelai */}
-          <CoupleSection data={weddingData} />
+          <CoupleSection
+            data={weddingData}
+            isActive={isOpened && activeSection === 0}
+            isInitial={!hasScrolled}
+          />
 
           {/* 2. Ayat Suci */}
-          <VerseSection data={weddingData} />
+          <VerseSection data={weddingData} isActive={isOpened && activeSection === 1} />
 
           {/* 3. Agenda Acara (Akad & Resepsi) */}
-          <AgendaSection data={weddingData} />
+          <AgendaSection data={weddingData} isActive={isOpened && activeSection === 2} />
 
           {/* 4. Waktu Acara (Timer & Lokasi Maps) */}
-          <EventDetailsSection data={weddingData} />
+          <EventDetailsSection data={weddingData} isActive={isOpened && activeSection === 3} />
 
-          {/* 5. Tanda Kasih / Rekening */}
-          <GiftSection data={weddingData} />
+          {/* 5. Penutup */}
+          <ClosingSection data={weddingData} isActive={isOpened && activeSection === 4} />
 
-          {/* 6. Penutup */}
-          <ClosingSection data={weddingData} />
+          {/* 6. Buku Tamu / Ucapan */}
+          <GuestBookSection isActive={isOpened && activeSection === 5} />
 
-          {/* 7. Buku Tamu / Ucapan */}
-          <GuestBookSection />
-
-          {/* 8. Footer / Selesai */}
-          <FooterSection data={weddingData} />
+          {/* 7. Footer / Selesai */}
+          <FooterSection data={weddingData} isActive={isOpened && activeSection === 6} />
         </main>
       </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { WeddingConfig } from '../types';
-import { Mail, MailOpen, Sparkles } from 'lucide-react';
+import { Mail, MailOpen } from 'lucide-react';
 
 interface CoverSectionProps {
   data: WeddingConfig;
@@ -100,7 +100,7 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
             src="/assets/section1_bg.webp"
             alt="Wedding Gate"
             aria-hidden="true"
-            className="w-full h-full object-cover object-center pointer-events-none"
+            className="w-full h-full object-cover object-center pointer-events-none opacity-80"
           />
 
           {/* Interactive Subtle Specular Light Sheen */}
@@ -143,12 +143,10 @@ export const CoverSection: React.FC<CoverSectionProps> = ({
             transition: isInteracting ? 'transform 0.12s ease-out' : 'transform 0.8s ease-out',
           }}
         >
-          <div className="inline-flex items-center gap-1.5 mb-1 sm:mb-1.5">
-            <Sparkles className="w-2.5 h-2.5 text-[#721c24]/60" />
+          <div className="mb-1 sm:mb-1.5">
             <p className="text-[10px] sm:text-[11px] tracking-[0.34em] uppercase text-stone-600 font-normal">
               The Wedding of
             </p>
-            <Sparkles className="w-2.5 h-2.5 text-[#721c24]/60" />
           </div>
 
           <h1 className="font-display text-[36px] sm:text-[44px] font-normal text-[#721c24] tracking-[0.06em] leading-tight drop-shadow-xs">

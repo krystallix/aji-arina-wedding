@@ -52,5 +52,5 @@ export const weddingData: WeddingConfig = {
       "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan do'a restu. Atas kehadiran dan do'a restunya kami ucapkan terima kasih.",
     signOff: 'Kami yang berbahagia',
   },
-  musicUrl: '/music/background.mp3',
+  musicUrl: '/music/wedding-song.mp3?v=1',
 };
