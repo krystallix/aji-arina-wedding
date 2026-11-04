@@ -28,11 +28,11 @@ export const FooterSection: React.FC<FooterSectionProps> = ({ data, isActive = f
         </span>
 
         {/* Foto The Sekids */}
-        <div className="reveal-scale delay-250 w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden shadow-lg border-2 border-stone-200/80 my-3 bg-stone-100">
+        <div className="reveal-scale delay-250 w-56 sm:w-64 aspect-square my-2 flex items-center justify-center">
           <img
             src="/assets/thesekids.webp"
             alt="Foto Arina & Aji"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain pointer-events-none drop-shadow-xs"
           />
         </div>
 
