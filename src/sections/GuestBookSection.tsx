@@ -1,31 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { GuestMessage } from '../types';
-import { Send, Heart } from 'lucide-react';
+import { Send, Heart, Loader2 } from 'lucide-react';
 import { FloralCorners } from '../components/FloralCorners';
 import { useInView } from '../hooks/useInView';
-
-const STORAGE_KEY = 'wedding_arina_aji_guestbook_v3';
+import { supabase } from '../lib/supabase';
 
 const DUMMY_NAMES = [
   'dimas & keluarga',
   'nadia & sahabat',
   'dimas',
   'nadia',
+  'test check',
 ];
 
-const isDummyMessage = (msg: GuestMessage) => {
+const isDummyMessage = (msg: { id?: string; name?: string; message?: string }) => {
   if (!msg || !msg.name) return true;
-  if (['1', '2'].includes(msg.id)) return true;
+  if (['1', '2'].includes(msg.id || '')) return true;
   const lowerName = msg.name.toLowerCase().trim();
   if (DUMMY_NAMES.includes(lowerName)) return true;
   if (
     msg.message &&
     (msg.message.includes('Barakallahu lakum') ||
-      msg.message.includes('Selamat berbahagia untuk kedua mempelai'))
+      msg.message.includes('Selamat berbahagia untuk kedua mempelai') ||
+      msg.message.includes('test connectivity'))
   ) {
     return true;
   }
   return false;
+};
+
+const formatTimeAgo = (dateStr?: string) => {
+  if (!dateStr) return 'Baru saja';
+  try {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    if (isNaN(diff) || diff < 0) return 'Baru saja';
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return 'Baru saja';
+    if (minutes < 60) return `${minutes} menit lalu`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} hari lalu`;
+    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  } catch {
+    return 'Baru saja';
+  }
 };
 
 interface GuestBookSectionProps {
@@ -34,59 +53,125 @@ interface GuestBookSectionProps {
 
 export const GuestBookSection: React.FC<GuestBookSectionProps> = ({ isActive = false }) => {
   const { ref, isInView } = useInView<HTMLElement>(0.2, isActive);
-  const [messages, setMessages] = useState<GuestMessage[]>(() => {
-    try {
-      // Clear legacy storage keys containing previous mock data
-      localStorage.removeItem('wedding_piki_rauuf_wishes');
-      localStorage.removeItem('wedding_aji_arina_wishes');
-
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const cleaned = parsed.filter((m: GuestMessage) => !isDummyMessage(m));
-          if (cleaned.length !== parsed.length) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
-          }
-          return cleaned;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return [];
-  });
+  const [messages, setMessages] = useState<GuestMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [name, setName] = useState('');
   const [attendance, setAttendance] = useState<'hadir' | 'tidak_hadir' | 'ragu'>('hadir');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !message.trim()) return;
+  // Fetch initial messages and listen to Supabase Realtime
+  useEffect(() => {
+    let isMounted = true;
 
-    setIsSubmitting(true);
+    const fetchWishes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('wishes')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-    const newMessage: GuestMessage = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      attendance,
-      message: message.trim(),
-      createdAt: 'Baru saja',
+        if (error) {
+          console.error('Error fetching wishes from Supabase:', error);
+          return;
+        }
+
+        if (data && isMounted) {
+          const formatted: GuestMessage[] = data
+            .filter((row) => !isDummyMessage(row))
+            .map((row) => ({
+              id: row.id,
+              name: row.name,
+              attendance: row.attendance,
+              message: row.message,
+              createdAt: formatTimeAgo(row.created_at),
+            }));
+          setMessages(formatted);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching wishes:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
 
-    const updated = [newMessage, ...messages];
-    setMessages(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (err) {
-      console.error(err);
-    }
+    fetchWishes();
 
-    setName('');
-    setMessage('');
-    setIsSubmitting(false);
+    // Setup Supabase Realtime channel
+    const channel = supabase
+      .channel('public:wishes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'wishes' },
+        (payload) => {
+          const newRow = payload.new as {
+            id: string;
+            name: string;
+            attendance: 'hadir' | 'tidak_hadir' | 'ragu';
+            message: string;
+            created_at: string;
+          };
+          if (!isDummyMessage(newRow)) {
+            const formattedItem: GuestMessage = {
+              id: newRow.id,
+              name: newRow.name,
+              attendance: newRow.attendance,
+              message: newRow.message,
+              createdAt: formatTimeAgo(newRow.created_at),
+            };
+            setMessages((prev) => [formattedItem, ...prev.filter((p) => p.id !== formattedItem.id)]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !message.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    const trimmedName = name.trim();
+    const trimmedMessage = message.trim();
+
+    try {
+      const { data, error } = await supabase
+        .from('wishes')
+        .insert([
+          {
+            name: trimmedName,
+            attendance,
+            message: trimmedMessage,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error inserting wish to Supabase:', error);
+        alert('Gagal mengirim doa restu. Silakan coba kembali.');
+      } else if (data) {
+        const newMsg: GuestMessage = {
+          id: data.id,
+          name: data.name,
+          attendance: data.attendance,
+          message: data.message,
+          createdAt: 'Baru saja',
+        };
+        setMessages((prev) => [newMsg, ...prev.filter((p) => p.id !== newMsg.id)]);
+        setMessage('');
+      }
+    } catch (err) {
+      console.error('Unexpected error submitting wish:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const hasMessages = messages.length > 0;
@@ -199,10 +284,19 @@ export const GuestBookSection: React.FC<GuestBookSectionProps> = ({ isActive = f
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full inline-flex items-center justify-center gap-1.5 bg-[#721c24] hover:bg-[#58151c] active:scale-[0.98] transition-all text-white text-[11.5px] py-2 rounded-lg cursor-pointer tracking-wider font-medium uppercase shadow-xs"
+            className="w-full inline-flex items-center justify-center gap-1.5 bg-[#721c24] hover:bg-[#58151c] active:scale-[0.98] disabled:opacity-70 transition-all text-white text-[11.5px] py-2 rounded-lg cursor-pointer tracking-wider font-medium uppercase shadow-xs"
           >
-            <Send className="w-3 h-3 text-rose-200" />
-            Kirim Doa Restu
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-3 h-3 text-rose-200 animate-spin" />
+                Mengirimkan...
+              </>
+            ) : (
+              <>
+                <Send className="w-3 h-3 text-rose-200" />
+                Kirim Doa Restu
+              </>
+            )}
           </button>
         </form>
 
@@ -243,7 +337,9 @@ export const GuestBookSection: React.FC<GuestBookSectionProps> = ({ isActive = f
           <div className="reveal delay-450 w-full max-w-[350px] text-left">
             <div className="border border-dashed border-stone-200 bg-white/60 rounded-lg p-3 text-center">
               <p className="text-[11.5px] text-stone-500 italic">
-                Belum ada ucapan. Jadilah yang pertama memberikan doa restu.
+                {isLoading
+                  ? 'Memuat ucapan...'
+                  : 'Belum ada ucapan. Jadilah yang pertama memberikan doa restu.'}
               </p>
             </div>
           </div>
