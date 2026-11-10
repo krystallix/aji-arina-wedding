@@ -29,11 +29,13 @@ export const FooterSection: React.FC<FooterSectionProps> = ({ data, isActive = f
 
         {/* Foto The Sekids */}
         <div className="reveal-scale delay-250 w-56 sm:w-64 aspect-square my-2 flex items-center justify-center">
-          <img
-            src="/assets/thesekids.webp"
-            alt="Foto Arina & Aji"
-            className="w-full h-full object-contain pointer-events-none drop-shadow-xs"
-          />
+          <div className="w-full h-full flex items-center justify-center animate-float-gentle">
+            <img
+              src="/assets/thesekids.webp"
+              alt="Foto Arina & Aji"
+              className="w-full h-full object-contain filter grayscale contrast-[1.05] brightness-[0.98] drop-shadow-md transition-all duration-700 ease-out hover:grayscale-0 hover:scale-105 cursor-pointer"
+            />
+          </div>
         </div>
 
         <div className="reveal delay-350 w-10 h-[1px] bg-stone-300 my-4" />

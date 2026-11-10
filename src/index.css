@@ -292,6 +292,20 @@
   will-change: transform, opacity;
 }
 
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.02);
+  }
+}
+
+.animate-float-gentle {
+  animation: gentleFloat 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* ====================================================
    Reveal on Scroll Entrance Animations
    ==================================================== */
