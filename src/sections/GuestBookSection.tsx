@@ -275,6 +275,10 @@ export const GuestBookSection: React.FC<GuestBookSectionProps> = ({ isActive = f
               rows={2}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                // Prevent Enter from submitting the form, particularly on mobile keyboards.
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               placeholder="Tuliskan ucapan dan doa restu..."
               className="w-full px-2.5 py-1 text-[12px] bg-white border border-stone-200 rounded-lg text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#721c24] resize-none"
             />
