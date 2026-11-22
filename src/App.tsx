@@ -137,7 +137,16 @@ export function App() {
   useEffect(() => {
     if (!isOpened) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
+      const target = e.target as HTMLElement | null;
+      if (target?.matches('input, textarea, select, button, [contenteditable="true"]')) return;
+
+      // Disable Space's browser scroll behavior without using it for section navigation.
+      if (e.key === ' ') {
+        e.preventDefault();
+        return;
+      }
+
+      if (['ArrowDown', 'PageDown'].includes(e.key)) {
         e.preventDefault();
         setHasScrolled(true);
         scrollToSection(Math.min(SECTION_COUNT - 1, activeSection + 1));
